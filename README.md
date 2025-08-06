@@ -4,10 +4,10 @@ A Python-based GUI application for merging multiple Word documents (.docx files)
 
 ## Features
 
-- 🖱️ **Drag-and-Drop Interface**: Easily add files by dragging and dropping them into the application
-- 📄 **Word Document Merging**: Combine multiple .docx files into a single document
-- 🗑️ **File Management**: Remove individual files or clear all files from the list
-- 🎯 **User-Friendly**: Simple and intuitive graphical interface
+-  **Drag-and-Drop Interface**: Easily add files by dragging and dropping them into the application
+-  **Word Document Merging**: Combine multiple .docx files into a single document
+-  **File Management**: Remove individual files or clear all files from the list
+-  **User-Friendly**: Simple and intuitive graphical interface
 
 ## Screenshots
 
