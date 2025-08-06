@@ -1,92 +1,189 @@
 import os
-from tkinter import Tk, Label, Button, Listbox, filedialog, END, messagebox, SINGLE
+from tkinter import Tk, Label, Button, Listbox, filedialog, END, messagebox, SINGLE, Frame, ttk
 from tkinterdnd2 import DND_FILES, TkinterDnD
 from docx import Document
 from docxcompose.composer import Composer
 
-try:
-    import comtypes.client  # for PDF conversion (Windows only)
-    has_comtypes = True
-except ImportError:
-    has_comtypes = False
-
 class WordMergerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Word File Merger")
-        self.root.geometry("600x450")
-
-        Label(root, text="Drag and drop .docx files below:", font=("Arial", 14)).pack(pady=10)
-
-        self.file_listbox = Listbox(root, selectmode=SINGLE, width=70, height=15)
-        self.file_listbox.pack(padx=10, pady=10)
+        self.root.title("Document Merger - Dark Theme")
+        self.root.geometry("700x500")
+        self.root.configure(bg='#1e1e1e')
+        
+        # Configure dark theme colors
+        self.colors = {
+            'bg_dark': '#1e1e1e',
+            'bg_medium': '#2d2d2d',
+            'bg_light': '#3d3d3d',
+            'text_primary': '#ffffff',
+            'text_secondary': '#cccccc',
+            'accent_amber': '#ffb74d',
+            'accent_amber_hover': '#ffa726',
+            'border': '#404040',
+            'success': '#4caf50',
+            'error': '#f44336'
+        }
+        
+        # Initialize file paths list
+        self.file_paths = []
+        
+        # Configure the main window
+        self.root.configure(bg=self.colors['bg_dark'])
+        self.setup_styles()
+        self.create_widgets()
+        
+    def setup_styles(self):
+        """Configure custom styles for the application"""
+        # Configure ttk styles if available
+        try:
+            style = ttk.Style()
+            style.theme_use('clam')
+            
+            # Configure button styles
+            style.configure('Amber.TButton',
+                          background=self.colors['accent_amber'],
+                          foreground=self.colors['bg_dark'],
+                          borderwidth=0,
+                          focuscolor='none',
+                          font=('Segoe UI', 10, 'bold'))
+            
+            style.map('Amber.TButton',
+                     background=[('active', self.colors['accent_amber_hover']),
+                                ('pressed', self.colors['accent_amber_hover'])])
+            
+        except:
+            pass  # Fallback to regular tkinter styling
+    
+    def create_widgets(self):
+        """Create and configure all UI widgets"""
+        # Main container
+        main_frame = Frame(self.root, bg=self.colors['bg_dark'])
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Title with gradient-like effect
+        title_frame = Frame(main_frame, bg=self.colors['bg_dark'])
+        title_frame.pack(fill='x', pady=(0, 10))
+        
+        title_label = Label(title_frame, 
+                           text="Document Merger", 
+                           font=('Segoe UI', 28, 'bold'),
+                           fg=self.colors['accent_amber'],
+                           bg=self.colors['bg_dark'])
+        title_label.pack()
+        
+        # Subtitle
+        subtitle_label = Label(main_frame,
+                              text="Drag and drop .docx files below to merge them",
+                              font=('Segoe UI', 12),
+                              fg=self.colors['text_secondary'],
+                              bg=self.colors['bg_dark'])
+        subtitle_label.pack(pady=(0, 25))
+        
+        # File list container with border
+        list_frame = Frame(main_frame, bg=self.colors['bg_medium'], relief='flat', bd=1)
+        list_frame.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        # File listbox with custom styling
+        self.file_listbox = Listbox(list_frame, 
+                                   selectmode=SINGLE, 
+                                   width=70, 
+                                   height=12,
+                                   font=('Segoe UI', 10),
+                                   bg=self.colors['bg_light'],
+                                   fg=self.colors['text_primary'],
+                                   selectbackground=self.colors['accent_amber'],
+                                   selectforeground=self.colors['bg_dark'],
+                                   relief='flat',
+                                   bd=0,
+                                   highlightthickness=1,
+                                   highlightcolor=self.colors['accent_amber'],
+                                   highlightbackground=self.colors['border'])
+        self.file_listbox.pack(fill='both', expand=True, padx=10, pady=10)
         self.file_listbox.drop_target_register(DND_FILES)
         self.file_listbox.dnd_bind('<<Drop>>', self.drop_files)
-
-        Button(root, text="Combine to Word", command=self.combine_documents).pack(pady=5)
-        Button(root, text="Convert Combined to PDF", command=self.convert_to_pdf).pack(pady=5)
-
-        Button(root, text="Remove Selected File", command=self.remove_selected_file).pack(pady=5)
-        Button(root, text="Clear All Files", command=self.clear_all_files).pack(pady=5)
+        
+        # Buttons container
+        button_frame = Frame(main_frame, bg=self.colors['bg_dark'])
+        button_frame.pack(pady=25)
+        
+        # Styled buttons
+        self.create_styled_button(button_frame, "Combine Documents", self.combine_documents, 0)
+        self.create_styled_button(button_frame, "Remove Selected", self.remove_selected_file, 1)
+        self.create_styled_button(button_frame, "Clear All Files", self.clear_all_files, 2)
+    
+    def create_styled_button(self, parent, text, command, column):
+        """Create a styled button with amber theme"""
+        button = Button(parent, 
+                       text=text,
+                       command=command,
+                       font=('Segoe UI', 11, 'bold'),
+                       bg=self.colors['accent_amber'],
+                       fg=self.colors['bg_dark'],
+                       activebackground=self.colors['accent_amber_hover'],
+                       activeforeground=self.colors['bg_dark'],
+                       relief='flat',
+                       bd=0,
+                       padx=25,
+                       pady=12,
+                       cursor='hand2')
+        button.pack(side='left', padx=12)
+        
+        # Add hover effects
+        button.bind('<Enter>', lambda e: button.configure(bg=self.colors['accent_amber_hover']))
+        button.bind('<Leave>', lambda e: button.configure(bg=self.colors['accent_amber']))
+        
+        return button
 
     def drop_files(self, event):
-        files = root.tk.splitlist(event.data)
+        files = self.root.tk.splitlist(event.data)
         for file_path in files:
-            if file_path.endswith(".docx") and file_path not in self.file_listbox.get(0, END):
-                self.file_listbox.insert(END, file_path)
+            if file_path.endswith(".docx") and file_path not in self.file_paths:
+                # Add to file paths list
+                self.file_paths.append(file_path)
+                # Display filename with icon
+                filename = os.path.basename(file_path)
+                self.file_listbox.insert(END, f"📄 {filename}")
 
     def remove_selected_file(self):
         selected = self.file_listbox.curselection()
         if selected:
-            self.file_listbox.delete(selected[0])
+            index = selected[0]
+            # Remove from both listbox and file_paths
+            self.file_listbox.delete(index)
+            if index < len(self.file_paths):
+                self.file_paths.pop(index)
 
     def clear_all_files(self):
         self.file_listbox.delete(0, END)
+        self.file_paths.clear()
 
     def combine_documents(self):
-        files = self.file_listbox.get(0, END)
-        if not files:
+        if not self.file_paths:
             messagebox.showerror("Error", "No files to combine.")
             return
 
-        save_path = filedialog.asksaveasfilename(defaultextension=".docx", filetypes=[("Word files", "*.docx")])
+        save_path = filedialog.asksaveasfilename(
+            defaultextension=".docx", 
+            filetypes=[("Word files", "*.docx")],
+            title="Save Combined Document"
+        )
         if not save_path:
             return
 
-        # Start with the first document
-        master = Document(files[0])
-        composer = Composer(master)
+        try:
+            # Start with the first document
+            master = Document(self.file_paths[0])
+            composer = Composer(master)
 
-        for file in files[1:]:
-            doc = Document(file)
-            composer.append(doc)
+            for file_path in self.file_paths[1:]:
+                doc = Document(file_path)
+                composer.append(doc)
 
-        composer.save(save_path)
-        messagebox.showinfo("Success", f"Combined file saved to:\n{save_path}")
-        self.last_combined_path = save_path
-
-    def convert_to_pdf(self):
-        if not has_comtypes:
-            messagebox.showerror("Missing Dependency", "PDF conversion requires 'comtypes' and Microsoft Word (Windows only).")
-            return
-
-        if not hasattr(self, 'last_combined_path'):
-            messagebox.showwarning("No File", "Please combine and save a Word file first.")
-            return
-
-        word = comtypes.client.CreateObject('Word.Application')
-        doc = word.Documents.Open(self.last_combined_path)
-
-        pdf_path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")])
-        if not pdf_path:
-            doc.Close()
-            word.Quit()
-            return
-
-        doc.SaveAs(pdf_path, FileFormat=17)
-        doc.Close()
-        word.Quit()
-        messagebox.showinfo("Success", f"PDF saved to:\n{pdf_path}")
+            composer.save(save_path)
+            messagebox.showinfo("Success", f"Combined file saved to:\n{save_path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to combine documents:\n{str(e)}")
 
 if __name__ == "__main__":
     root = TkinterDnD.Tk()
