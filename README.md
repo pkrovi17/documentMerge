@@ -111,25 +111,6 @@ documentMerge/
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Built with Python and Tkinter
-- Uses `python-docx` for Word document manipulation
-- Uses `tkinterdnd2` for drag-and-drop functionality
-- Uses `docxcompose` for document composition
-
-## Support
-
-If you encounter any issues or have questions, please:
-
-1. Check the [troubleshooting section](#troubleshooting) above
-2. Search existing [issues](https://github.com/yourusername/documentMerge/issues)
-3. Create a new issue with detailed information about your problem
-
 ---
 
 **Note**: This application is designed for merging Word documents (.docx format). For other file formats, consider converting them to .docx first.
